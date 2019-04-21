@@ -41,6 +41,9 @@ public class RddDatasetConversion {
         for (Response response : responseJavaRDD.collect()) {
             System.out.println(response);
         }
+        
+        
+        responseDataset.groupBy("ageMidPoint").count().show();
     }
     private static Integer toInt(String split) {
         return split.isEmpty() ? null : Math.round(Float.valueOf(split));

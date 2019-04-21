@@ -55,13 +55,14 @@ public class SparkService {
                 .mapToPair(record -> new Tuple2<>(record._1, processValue(record._2)));*/
 
         
-        
+
         Map<Long, Long> pairs = lines.map(line -> parseLine(line))
-                .mapToPair(line -> new Tuple2<>(line.getAccNum(), LocalDateTime.parse(line.getDateTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+                .mapToPair(line -> new Tuple2<>(line.getAccNum(),
+                        LocalDateTime.parse(line.getDateTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
                 .groupByKey()
                 .mapToPair(record -> new Tuple2<>(record._1, getGapTimes(record._2)))
-                .flatMap(tpl -> tpl._2.iterator()).countByValue();
-        
+                .flatMap(tpl -> tpl._2.iterator())
+                .countByValue();
         
         /*Dataset<OutputParameters> dataset = sparkSession.createDataset(result.rdd(), Encoders.bean(OutputParameters.class));
         
@@ -69,7 +70,17 @@ public class SparkService {
                 
         dataset.groupBy("accNum").count().show();*/
 
-        pairs.entrySet().stream().forEach(one -> System.out.println(one.getKey()+"="+one.getValue()));
+        //pairs.entrySet().stream().forEach(one -> System.out.println(one.getKey()+"="+one.getValue()));
+
+        long[] countArray = new long[12];
+        pairs.entrySet().stream().forEach(entry -> {
+            long bucket = entry.getKey() / 300;
+            countArray[(int) bucket] = countArray[(int) bucket]+ (Long) entry.getValue();
+        });
+        
+        for (long l : countArray){
+            System.out.println(l);
+        }
         
     }
 
@@ -151,6 +162,9 @@ public class SparkService {
     }
     
     public static void main(String[] args) throws Exception {
+        /*int sec= 901;
+        int res = ((int)sec / 300);
+        System.out.println("hash: "+res);*/
         Logger.getLogger("org").setLevel(Level.ERROR);
         cacheAnalysis();
     }
